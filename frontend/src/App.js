@@ -5,6 +5,7 @@ function App() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [message, setMessage] = useState("");
   const [fileType, setFileType] = useState("");
+  const [imageUrl, setImageUrl] = useState(""); // ✅ Define imageUrl state
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -39,6 +40,13 @@ function App() {
       });
 
       setMessage(response.data.message);
+
+      // ✅ Ensure imageUrl updates only for FITS files
+      if (response.data.image_url) {
+        setImageUrl(response.data.image_url);
+      } else {
+        setImageUrl(""); // Reset imageUrl for non-FITS uploads
+      }
     } catch (error) {
       setMessage("Upload failed.");
       console.error(error);
@@ -51,6 +59,14 @@ function App() {
       <input type="file" accept=".fits,.csv,.txt" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload File</button>
       <p>{message}</p>
+      
+      {/* ✅ Display image only if available */}
+      {imageUrl && (
+        <div>
+          <h2>Processed Image:</h2>
+          <img src={imageUrl} alt="Converted FITS" style={{ maxWidth: "600px", border: "1px solid #ccc" }} />
+        </div>
+      )}
     </div>
   );
 }

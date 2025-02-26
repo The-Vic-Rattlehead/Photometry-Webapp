@@ -53,15 +53,38 @@ async def upload_file(file: UploadFile = File(...)):
     
     elif file.filename.lower().endswith('.csv') or file.filename.lower().endswith(".txt"):
         try:
-            delimiter = "," if file.filename.endswith(".csv") else "\t"
+            print(f"Processing {file.filename} as CSV/TXT")  # ✅ Debugging
+
+            # Read file contents
             contents = await file.read()
-            df = pd.read_csv(io.StringIO(contents.decode()),delimiter=delimiter)
-            return{"filename":file.filename,
-                   "message": f"{file.filename} uploaded successfully!",
+            print(f"File size: {len(contents)} bytes")  # ✅ Check if the file is empty
+
+            if len(contents) == 0:
+                return {"error": f"{file.filename} is empty!"}
+
+            # Try decoding
+            try:
+                decoded_contents = contents.decode("utf-8")
+            except UnicodeDecodeError:
+                return {"error": f"Failed to decode {file.filename}. Ensure it's UTF-8 encoded."}
+
+            print("File contents preview (first 200 chars):", decoded_contents[:200])  # ✅ Debug first part of file
+
+            # Determine delimiter
+            delimiter = "," if file.filename.endswith(".csv") else "\t"
+
+            # Read CSV/TXT into DataFrame
+            df = pd.read_csv(io.StringIO(decoded_contents), delimiter=delimiter)
+
+            print(f"Parsed CSV/TXT with {df.shape[0]} rows and {df.shape[1]} columns")  # ✅ Confirm parsing success
+
+            return {
+                "filename": file.filename,
+                "message": f"{file.filename} uploaded successfully!",
                 "rows": df.shape[0],
                 "columns": df.columns.tolist(),
-                "sample_data": df.head(5).to_dict(orient="records")
-                   }
+                "sample_data": df.head(5).to_dict(orient="records"),
+            }
         except Exception as e:
             return {"error": f"Parsing failed: {str(e)}"}
     return {"filename": file.filename, "message": "File uploaded successfully!"}
