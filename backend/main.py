@@ -1,12 +1,13 @@
 from fastapi import FastAPI, File, UploadFile
 import shutil
 import os
+import pandas as pd
 from astropy.io import fits
 from PIL import Image
 import numpy as np
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-
+import io
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -50,6 +51,19 @@ async def upload_file(file: UploadFile = File(...)):
         except Exception as e:
             return {"error": f"Conversion failed: {str(e)}"}
     
+    elif file.filename.lower().endswith('.csv') or file.filename.lower().endswith(".txt"):
+        try:
+            delimiter = "," if file.filename.endswith(".csv") else "\t"
+            contents = await file.read()
+            df = pd.read_csv(io.StringIO(contents.decode()),delimiter=delimiter)
+            return{"filename":file.filename,
+                   "message": f"{file.filename} uploaded successfully!",
+                "rows": df.shape[0],
+                "columns": df.columns.tolist(),
+                "sample_data": df.head(5).to_dict(orient="records")
+                   }
+        except Exception as e:
+            return {"error": f"Parsing failed: {str(e)}"}
     return {"filename": file.filename, "message": "File uploaded successfully!"}
 
 @app.get("/")

@@ -3,11 +3,25 @@ import axios from "axios";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [imageUrl, setImageUrl] = useState("");
   const [message, setMessage] = useState("");
+  const [fileType, setFileType] = useState("");
 
   const handleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      if (file.name.endsWith(".csv")) {
+        setFileType("CSV");
+      } else if (file.name.endsWith(".txt")) {
+        setFileType("TXT");
+      } else if (file.name.endsWith(".fits")) {
+        setFileType("FITS");
+      } else {
+        setMessage("Unsupported file type.");
+        return;
+      }
+      setMessage(`Selected file: ${file.name} (${fileType})`);
+    }
   };
 
   const handleUpload = async () => {
@@ -25,9 +39,6 @@ function App() {
       });
 
       setMessage(response.data.message);
-      if (response.data.image_url) {
-        setImageUrl(response.data.image_url);
-      }
     } catch (error) {
       setMessage("Upload failed.");
       console.error(error);
@@ -37,19 +48,12 @@ function App() {
   return (
     <div className="App">
       <h1>Photometry Web App</h1>
-      <input type="file" accept=".fits" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Upload FITS File</button>
+      <input type="file" accept=".fits,.csv,.txt" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload File</button>
       <p>{message}</p>
-      {imageUrl && (
-        <div>
-          <h2>Processed Image:</h2>
-          <img src={imageUrl} alt="Converted FITS" style={{ maxWidth: "600px", border: "1px solid #ccc" }} />
-        </div>
-      )}
     </div>
   );
 }
 
 export default App;
-
 
