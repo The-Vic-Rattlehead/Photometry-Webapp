@@ -47,4 +47,4 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.get("/")
 def read_root():
-    return {"message": "playing with my dingaling!"}
+    return {"message": "booty jiggling fun!"}
