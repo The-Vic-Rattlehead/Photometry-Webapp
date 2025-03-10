@@ -11,7 +11,7 @@ import io
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,20 +55,21 @@ async def upload_file(file: UploadFile = File(...)):
         try:
             print(f"Processing {file.filename} as CSV/TXT")  # ✅ Debugging
 
-            # Determine delimiter
-            # if file.filename.endswith(".csv"): 
-            #     delimiter=","
-            # else: 
-            #     delimiter="\t"
+           
+            if file.filename.endswith(".txt"): 
+                delimiter="\t"
+            else: 
+                delimiter=" , "
 
-            # Read CSV/TXT into DataFrame
             
-            data_path = os.path.join(UPLOAD_FOLDER, file.filename)
-            print(data_path)
-            df = pd.read_csv(data_path, sep='\t',encoding='unicode_escape')
-
+            
+            
+            print(file_path)
+            df = pd.read_csv(file_path, sep=delimiter,encoding='unicode_escape',engine='python')
+            df.fillna("N/A", inplace=True)
             print(f"Parsed CSV/TXT with {df.shape[0]} rows and {df.shape[1]} columns")  # ✅ Confirm parsing success
-
+            print('i love big booty latinas')
+            print(df)
             return {
                 "filename": file.filename,
                 "message": f"{file.filename} uploaded successfully!",
