@@ -30,7 +30,7 @@ async def upload_file(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-
+    response_data = {"filename": file.filename, "message": "File uploaded successfully!"}
     # If it's a FITS file, convert it to PNG
     if file.filename.lower().endswith(".fits"):
         png_filename = file.filename.rsplit(".", 1)[0] + ".png"
@@ -66,20 +66,16 @@ async def upload_file(file: UploadFile = File(...)):
             
             print(file_path)
             df = pd.read_csv(file_path, sep=delimiter,encoding='unicode_escape',engine='python')
-            df.fillna("N/A", inplace=True)
+            df.fillna(" ", inplace=True)
+            response_data["table_data"] = df.to_dict(orient="records")  # Convert to JSON format
+            response_data["file_url"] = f"http://127.0.0.1:8000/static/{file.filename}"
             print(f"Parsed CSV/TXT with {df.shape[0]} rows and {df.shape[1]} columns")  # ✅ Confirm parsing success
             print('i love big booty latinas')
             print(df)
-            return {
-                "filename": file.filename,
-                "message": f"{file.filename} uploaded successfully!",
-                "rows": df.shape[0],
-                "columns": df.columns.tolist(),
-                "sample_data": df.head(5).to_dict(orient="records"),
-            }
+            
         except Exception as e:
-            return {"error": f"Parsing failed: {str(e)}"}
-    return {"filename": file.filename, "message": "File uploaded successfully!"}
+            response_data["error"] = f"CSV/TXT parsing failed: {str(e)}"
+    return response_data
 
 @app.get("/")
 def read_root():

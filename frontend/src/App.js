@@ -3,26 +3,13 @@ import axios from "axios";
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [tableData, setTableData] = useState([]);
   const [message, setMessage] = useState("");
-  const [fileType, setFileType] = useState("");
-  const [imageUrl, setImageUrl] = useState(""); // ✅ Define imageUrl state
+  const [fileUrl, setFileUrl] = useState("");
 
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setSelectedFile(file);
-      if (file.name.endsWith(".csv")) {
-        setFileType("CSV");
-      } else if (file.name.endsWith(".txt")) {
-        setFileType("TXT");
-      } else if (file.name.endsWith(".fits")) {
-        setFileType("FITS");
-      } else {
-        setMessage("Unsupported file type.");
-        return;
-      }
-      setMessage(`Selected file: ${file.name} (${fileType})`);
-    }
+    setSelectedFile(event.target.files[0]);
   };
 
   const handleUpload = async () => {
@@ -41,12 +28,18 @@ function App() {
 
       setMessage(response.data.message);
 
-      // ✅ Ensure imageUrl updates only for FITS files
       if (response.data.image_url) {
         setImageUrl(response.data.image_url);
-      } else {
-        setImageUrl(""); // Reset imageUrl for non-FITS uploads
       }
+
+      if (response.data.table_data) {
+        setTableData(response.data.table_data);
+      }
+
+      if (response.data.file_url) {
+        setFileUrl(response.data.file_url);
+      }
+      
     } catch (error) {
       setMessage("Upload failed.");
       console.error(error);
@@ -56,20 +49,53 @@ function App() {
   return (
     <div className="App">
       <h1>Photometry Web App</h1>
-      <input type="file" accept=".fits,.csv,.txt" onChange={handleFileChange} />
+      <input type="file" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload File</button>
       <p>{message}</p>
-      
-      {/* ✅ Display image only if available */}
+
+      {/* Show Image if FITS was uploaded */}
       {imageUrl && (
         <div>
           <h2>Processed Image:</h2>
           <img src={imageUrl} alt="Converted FITS" style={{ maxWidth: "600px", border: "1px solid #ccc" }} />
         </div>
       )}
+
+      {/* Show Table if CSV/TXT was uploaded */}
+      {tableData.length > 0 && (
+        <div>
+          <h2>CSV/TXT Data:</h2>
+          <table border="1">
+            <thead>
+              <tr>
+                {Object.keys(tableData[0]).map((key) => (
+                  <th key={key}>{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {tableData.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {Object.values(row).map((val, colIndex) => (
+                    <td key={colIndex}>{val}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Show Download Link if CSV/TXT uploaded */}
+      {fileUrl && (
+        <p>
+          <a href={fileUrl} download>Download Uploaded File</a>
+        </p>
+      )}
     </div>
   );
 }
 
 export default App;
+
 
