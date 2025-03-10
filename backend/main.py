@@ -53,25 +53,15 @@ async def upload_file(file: UploadFile = File(...)):
     
     if file.filename.lower().endswith('.csv') or file.filename.lower().endswith(".txt"):
         try:
-            print(f"Processing {file.filename} as CSV/TXT")  # ✅ Debugging
-
-           
             if file.filename.endswith(".txt"): 
                 delimiter="\t"
             else: 
                 delimiter=" , "
-
             
-            
-            
-            print(file_path)
             df = pd.read_csv(file_path, sep=delimiter,encoding='unicode_escape',engine='python')
             df.fillna(" ", inplace=True)
             response_data["table_data"] = df.to_dict(orient="records")  # Convert to JSON format
             response_data["file_url"] = f"http://127.0.0.1:8000/static/{file.filename}"
-            print(f"Parsed CSV/TXT with {df.shape[0]} rows and {df.shape[1]} columns")  # ✅ Confirm parsing success
-            print('i love big booty latinas')
-            print(df)
             
         except Exception as e:
             response_data["error"] = f"CSV/TXT parsing failed: {str(e)}"
