@@ -53,12 +53,11 @@ async def upload_file(file: UploadFile = File(...)):
     
     if file.filename.lower().endswith('.csv') or file.filename.lower().endswith(".txt"):
         try:
-            with open(file_path, 'r', encoding="unicode_escape") as f:
-                first_line = f.readline()
-                if ',' in first_line:
-                    delimiter=','
-                else:
-                    delimiter='\t'
+            if file.filename.endswith(".txt"): 
+                delimiter="\t"
+            else: 
+                delimiter=" , "
+            
             df = pd.read_csv(file_path, sep=delimiter,encoding='unicode_escape',engine='python')
             df.fillna(" ", inplace=True)
             response_data["table_data"] = df.to_dict(orient="records")  # Convert to JSON format
