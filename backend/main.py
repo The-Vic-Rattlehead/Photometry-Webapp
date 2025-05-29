@@ -53,10 +53,17 @@ async def upload_file(file: UploadFile = File(...)):
     
     if file.filename.lower().endswith('.csv') or file.filename.lower().endswith(".txt"):
         try:
-            if file.filename.endswith(".txt"): 
-                delimiter="\t"
-            else: 
-                delimiter=" , "
+            if file.filename.endswith(".txt") or file.filename.endswith(".csv"): 
+                with open(file_path, "r", encoding="unicode_escape") as f:
+                    contents = f.read()
+                first_line = contents.splitlines()[0]
+                if first_line.count(",") > first_line.count("\t"):
+                    delimiter = ","
+                else:
+                    delimiter = "\t"
+            # else: 
+            #     print('.csv')
+            #     delimiter=","
             
             df = pd.read_csv(file_path, sep=delimiter,encoding='unicode_escape',engine='python')
             df.fillna(" ", inplace=True)
