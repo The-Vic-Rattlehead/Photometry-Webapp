@@ -64,7 +64,7 @@ async def upload_file(file: UploadFile = File(...)):
                 img = Image.fromarray(image_data)
                 print('save')
                 img.save(png_path)
-                
+                print('i love undertime slopper and the Based God!')
             return {
                 "filename": png_filename,
                 "message": f"{png_filename} converted to PNG successfully!",
