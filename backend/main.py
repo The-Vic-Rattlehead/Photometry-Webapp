@@ -39,15 +39,11 @@ async def upload_file(file: UploadFile = File(...)):
         try:
             with fits.open(file_path) as hdul:
                 data = hdul[0].data
-                print('sanitize')
                 data = np.nan_to_num(data, nan=0.0, posinf=0.0, neginf=0.0)
-                print('check ptp')
                 if np.ptp(data) == 0:
                     raise ValueError("FITS image has no variation in pixel values.")
-                print('ptp!=0 make float64')
                 data = np.array(data, dtype=np.float64)
                 print(np.min(data),np.max(data))
-                print('set nrom')
                 vmin=np.min(data)
                 vmax=np.max(data)
                 try:
@@ -55,16 +51,11 @@ async def upload_file(file: UploadFile = File(...)):
                 except Exception as e:
                     print("ImageNormalize failed:", repr(e))
                     raise
-                print('normmalize data')
                 normalized_data = norm(data)  # values are now float32 in 0–1 range
-                print('convert to 8bit')
                 # Convert to grayscale image for PNG saving (still needed for display)
                 image_data = (normalized_data * 255).astype(np.uint8)
-                print('create image')
                 img = Image.fromarray(image_data)
-                print('save')
                 img.save(png_path)
-                print('i love undertime slopper and the Based God!')
             return {
                 "filename": png_filename,
                 "message": f"{png_filename} converted to PNG successfully!",
