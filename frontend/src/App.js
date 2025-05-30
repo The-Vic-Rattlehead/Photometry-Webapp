@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
+
 
 function App() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -7,7 +8,28 @@ function App() {
   const [tableData, setTableData] = useState([]);
   const [message, setMessage] = useState("");
   const [fileUrl, setFileUrl] = useState("");
+  const imageRef = useRef(null);
+  const [clickCoordinates, setClickCoordinates] = useState(null);
+  
+  const handleImageClick = (event) => {
+    const rect = imageRef.current.getBoundingClientRect();
+    const scaleX = imageRef.current.naturalWidth / rect.width;
+    const scaleY = imageRef.current.naturalHeight / rect.height;
 
+    const x = Math.round((event.clientX - rect.left) * scaleX);
+    const y = Math.round((event.clientY - rect.top) * scaleY);
+
+    console.log("Clicked coordinates:", x, y);
+
+    // Optional: send to backendc
+    axios.post("http://127.0.0.1:8000/click", { x, y })
+    .then(res => {
+      console.log("Backend received:", res.data);
+      setClickCoordinates(res.data.received);
+    })
+    .catch(err => console.error("Error sending click data", err));
+    };
+  
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
   };
@@ -57,7 +79,18 @@ function App() {
       {imageUrl && (
         <div>
           <h2>Processed Image:</h2>
-          <img src={imageUrl} alt="Converted FITS" style={{ maxWidth: "600px", border: "1px solid #ccc" }} />
+          <img
+            ref={imageRef}
+            src={imageUrl}
+            alt="Converted FITS"
+            onClick={handleImageClick}
+            style={{ maxWidth: "600px", border: "1px solid #ccc", cursor: "crosshair" }}
+          />
+          {clickCoordinates && (
+            <p>
+              Clicked Coordinates: (x: {clickCoordinates[0]}, y: {clickCoordinates[1]})
+            </p>
+          )}
         </div>
       )}
 
@@ -97,5 +130,3 @@ function App() {
 }
 
 export default App;
-
-
