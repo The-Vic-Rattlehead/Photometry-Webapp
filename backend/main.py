@@ -47,7 +47,7 @@ async def upload_file(file: UploadFile = File(...)):
                 vmin=np.min(data)
                 vmax=np.max(data)
                 try:
-                    norm = ImageNormalize(data, stretch=SqrtStretch(), clip=True, vmin=vmin, vmax=vmax)
+                    norm = ImageNormalize(data, stretch=LogStretch(), clip=True, vmin=vmin, vmax=vmax)
                 except Exception as e:
                     print("ImageNormalize failed:", repr(e))
                     raise
