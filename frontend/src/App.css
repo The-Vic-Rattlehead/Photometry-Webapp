@@ -1,10 +1,11 @@
-.app-container {
+/* ---- keep main-body as two columns ---- */
+.main-body {
   display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  font-family: sans-serif;
+  flex: 1;
+  overflow: hidden;
+  padding: 20px;
+  gap: 20px;
 }
-
 .app-header {
   display: flex;
   justify-content: space-between;
@@ -18,19 +19,56 @@
   margin-right: 10px;
 }
 
-.main-body {
+/* ---- left‐pane: takes half the width (flex:1) ---- */
+.left-pane {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─────────── Ensure right‐pane has padding so handles stay visible ─────────── */
+.right-pane {
+  flex: 1;
   display: flex;
-  flex: 1;
-  overflow: auto;
-  padding: 20px;
-  gap: 20px;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 16px;           /* keeps the draggable corner from touching the edge */
+  box-sizing: border-box;
 }
 
-.left-pane, .right-pane {
-  flex: 1;
-  overflow: auto;
+/* ─────────── Table wrapper: no max‐sizes, only an initial size ─────────── */
+.table-wrapper {
+  width: 100%;             /* start filling the right pane’s width */
+  height: 300px;           /* initial height (user can drag taller or shorter) */
+  resize: both;            /* user can drag bottom‐right corner to change size */
+  overflow: auto;          /* scrollbars appear whenever the table is bigger */
+  border: 1px solid #ccc;
+  box-sizing: border-box;  /* padding/border included in width/height */
+  background: white;
+  position: relative;      /* for the little “≡” handle */
 }
 
-.status-msg, .download-link {
-  margin: 10px 20px;
+/* ─────────── Optional “≡” handle styling ─────────── */
+.table-wrapper::after {
+  content: "≡";
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+/* ─────────── Force horizontal overflow if table is too wide ─────────── */
+.table-wrapper table {
+  width: max-content;      /* make the table as wide as its columns need */
+  min-width: 100%;         /* but never smaller than its wrapper’s width */
+  border-collapse: collapse;
+}
+
+.table-wrapper th,
+.table-wrapper td {
+  padding: 4px 8px;
+  text-align: left;
+  white-space: nowrap;     /* prevents wrapping—forces overflow if needed */
+  border: 1px solid #999;
 }

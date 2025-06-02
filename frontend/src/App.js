@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
@@ -10,6 +10,59 @@ function App() {
   const [fileUrl, setFileUrl] = useState("");
   const imageRef = useRef(null);
   const [clickCoordinates, setClickCoordinates] = useState(null);
+
+  const tableWrapperRef = useRef(null);
+
+  useEffect(() => {
+    const table = tableWrapperRef.current;
+    if (!table) return;
+
+    let isDragging = false;
+    let startX, startY, scrollLeft, scrollTop;
+
+    const mouseDownHandler = (e) => {
+      isDragging = true;
+      startX = e.pageX - table.offsetLeft;
+      startY = e.pageY - table.offsetTop;
+      scrollLeft = table.scrollLeft;
+      scrollTop = table.scrollTop;
+      table.style.cursor = "grabbing";
+      table.style.userSelect = "none";
+    };
+
+    const mouseLeaveHandler = () => {
+      isDragging = false;
+      table.style.cursor = "grab";
+    };
+
+    const mouseUpHandler = () => {
+      isDragging = false;
+      table.style.cursor = "grab";
+    };
+
+    const mouseMoveHandler = (e) => {
+      if (!isDragging) return;
+      e.preventDefault(); // Prevent text selection
+      const x = e.pageX - table.offsetLeft;
+      const y = e.pageY - table.offsetTop;
+      const walkX = (x - startX) * 1.5;
+      const walkY = (y - startY) * 1.5;
+      table.scrollLeft = scrollLeft - walkX;
+      table.scrollTop = scrollTop - walkY;
+    };
+
+    table.addEventListener("mousedown", mouseDownHandler);
+    table.addEventListener("mouseleave", mouseLeaveHandler);
+    table.addEventListener("mouseup", mouseUpHandler);
+    table.addEventListener("mousemove", mouseMoveHandler);
+
+    return () => {
+      table.removeEventListener("mousedown", mouseDownHandler);
+      table.removeEventListener("mouseleave", mouseLeaveHandler);
+      table.removeEventListener("mouseup", mouseUpHandler);
+      table.removeEventListener("mousemove", mouseMoveHandler);
+    };
+  }, []);
 
   const handleImageClick = (event) => {
     const rect = imageRef.current.getBoundingClientRect();
@@ -92,24 +145,26 @@ function App() {
           {tableData.length > 0 && (
             <>
               <h2>CSV/TXT Data:</h2>
-              <table border="1">
-                <thead>
-                  <tr>
-                    {Object.keys(tableData[0]).map((key) => (
-                      <th key={key}>{key}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableData.map((row, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {Object.values(row).map((val, colIndex) => (
-                        <td key={colIndex}>{val}</td>
+              <div className="table-wrapper" ref={tableWrapperRef}>
+                <table border="1">
+                  <thead>
+                    <tr>
+                      {Object.keys(tableData[0]).map((key) => (
+                        <th key={key}>{key}</th>
                       ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {tableData.map((row, rowIndex) => (
+                      <tr key={rowIndex}>
+                        {Object.values(row).map((val, colIndex) => (
+                          <td key={colIndex}>{val}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
         </div>
