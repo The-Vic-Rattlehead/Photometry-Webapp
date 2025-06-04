@@ -24,7 +24,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Mount the static folder so we can serve converted images
 app.mount("/static", StaticFiles(directory=UPLOAD_FOLDER), name="static")
-
+fits_image_height = None
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
     # Save the uploaded file
@@ -39,7 +39,10 @@ async def upload_file(file: UploadFile = File(...)):
         try:
             with fits.open(file_path) as hdul:
                 data = hdul[0].data
+                
                 data = np.nan_to_num(data, nan=0.0, posinf=0.0, neginf=0.0)
+                global fits_image_height
+                fits_image_height = data.shape[0]
                 if np.ptp(data) == 0:
                     raise ValueError("FITS image has no variation in pixel values.")
                 data = np.array(data, dtype=np.float64)
@@ -54,7 +57,8 @@ async def upload_file(file: UploadFile = File(...)):
                 normalized_data = norm(data)  # values are now float32 in 0–1 range
                 # Convert to grayscale image for PNG saving (still needed for display)
                 image_data = (normalized_data * 255).astype(np.uint8)
-                img = Image.fromarray(image_data)
+                flipped_data = np.flipud(image_data)
+                img = Image.fromarray(flipped_data)
                 img.save(png_path)
             return {
                 "filename": png_filename,
@@ -89,8 +93,12 @@ async def upload_file(file: UploadFile = File(...)):
 async def receive_click(data: dict):
     x = data.get("x")
     y = data.get("y")
-    print(f"User clicked at (x={x}, y={y})")
-    return {"status": "ok", "received": [x, y]}
+    global fits_image_height
+    if fits_image_height is None:
+        return {"status": "error", "message": "No FITS image height available."}
+    corrected_y = fits_image_height - y
+    print(f"User clicked at (x={x}, y={corrected_y})")
+    return {"status": "ok", "received": [x, corrected_y]}
 
 @app.get("/")
 def read_root():
