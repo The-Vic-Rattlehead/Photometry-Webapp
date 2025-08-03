@@ -1,6 +1,6 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
+from fastapi.staticfiles import StaticFiles # type: ignore
+from fastapi.middleware.cors import CORSMiddleware # type: ignore
 import os
 import shutil
 from astropy.io import fits
@@ -11,6 +11,7 @@ from PIL import Image
 from threading import Lock
 from astropy.coordinates import Angle
 import astropy.units as u
+import pandas as pd
 
 app = FastAPI()
 app.add_middleware(
@@ -159,11 +160,12 @@ async def upload_file(file: UploadFile = File(...)):
                 contents = f.read()
             first_line = contents.splitlines()[0]
             if first_line.count(",") > first_line.count("\t"):
+                print('poop!')
                 delimiter = ","
             else:
+                print('pee!')
                 delimiter = "\t"
-            import pandas as pd
-            df = pd.read_csv(file_path, sep=delimiter, encoding="unicode_escape", engine="python")
+            df = pd.read_csv(file_path, sep=delimiter, encoding="unicode_escape", engine="c")
             df.fillna(" ", inplace=True)
             response_data["table_data"] = df.to_dict(orient="records")
             response_data["file_url"] = f"http://127.0.0.1:8000/static/{file.filename}"
@@ -173,7 +175,7 @@ async def upload_file(file: UploadFile = File(...)):
     return response_data
 
 
-from fastapi import HTTPException
+from fastapi import HTTPException # type: ignore
 
 @app.post("/click")
 async def receive_click(data: dict):
