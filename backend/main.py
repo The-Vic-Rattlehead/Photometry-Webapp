@@ -160,10 +160,8 @@ async def upload_file(file: UploadFile = File(...)):
                 contents = f.read()
             first_line = contents.splitlines()[0]
             if first_line.count(",") > first_line.count("\t"):
-                print('poop!')
                 delimiter = ","
             else:
-                print('pee!')
                 delimiter = "\t"
             df = pd.read_csv(file_path, sep=delimiter, encoding="unicode_escape", engine="c")
             df.fillna(" ", inplace=True)
